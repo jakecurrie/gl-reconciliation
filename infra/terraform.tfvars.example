@@ -1,0 +1,16 @@
+prefix      = "glrec"
+environment = "dev"
+
+# Azure OpenAI is available in: eastus, westeurope, australiaeast, and others.
+# Verify your region at: https://learn.microsoft.com/azure/ai-services/openai/concepts/models
+location = "eastus"
+
+# PostgreSQL admin username (password is auto-generated and stored in Key Vault)
+postgres_admin_login = "pgadmin"
+
+# GPT-4.1-mini model version — check available versions with:
+#   az cognitiveservices account deployment list --name <account> --resource-group <rg>
+openai_model_version = "2025-04-14"
+
+# ACR SKU: Basic (dev), Standard, or Premium
+acr_sku = "Basic"
