@@ -1,9 +1,8 @@
 prefix      = "glrec"
 environment = "dev"
 
-# Azure OpenAI is available in: eastus, westeurope, australiaeast, and others.
-# Verify your region at: https://learn.microsoft.com/azure/ai-services/openai/concepts/models
-location = "eastus"
+# Azure OpenAI is available in canadaeast — verify at: https://learn.microsoft.com/azure/ai-services/openai/concepts/models
+location = "canadaeast"
 
 # PostgreSQL admin username (password is auto-generated and stored in Key Vault)
 postgres_admin_login = "pgadmin"
