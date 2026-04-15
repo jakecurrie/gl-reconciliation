@@ -13,7 +13,7 @@ variable "environment" {
 variable "location" {
   description = "Azure region. Must support Azure OpenAI — eastus and westeurope are safest."
   type        = string
-  default     = "eastus"
+  default     = "canadaeast"
 }
 
 variable "postgres_admin_login" {
