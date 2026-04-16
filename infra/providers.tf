@@ -10,7 +10,16 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.0"
     }
+    azuredevops = {
+      source  = "microsoft/azuredevops"
+      version = "~> 1.0"
+    }
   }
+}
+
+provider "azuredevops" {
+  org_service_url       = var.ado_org_url
+  personal_access_token = var.ado_pat
 }
 
 provider "azurerm" {
