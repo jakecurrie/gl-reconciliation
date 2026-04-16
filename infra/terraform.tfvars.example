@@ -13,3 +13,23 @@ openai_model_version = "2025-04-14"
 
 # ACR SKU: Basic (dev), Standard, or Premium
 acr_sku = "Basic"
+
+# ── Azure DevOps ──────────────────────────────────────────────────────────────
+# Prerequisite: create the ADO organisation manually at dev.azure.com first
+
+ado_org_url      = "https://dev.azure.com/<your-org>"
+ado_project_name = "gl-reconciliation"
+
+# PAT needs: Project (Read & Write), Build (Read & Execute), Service Connections (Read, Query, Manage)
+ado_pat = "<ado-personal-access-token>"
+
+github_repo = "jakecurrie/gl-reconciliation"
+github_pat  = "<github-personal-access-token>"  # repo scope
+
+sonarcloud_org   = "<sonarcloud-org-key>"
+sonarcloud_token = "<sonarcloud-user-token>"
+
+# Service principal for the ADO → Azure service connection
+# Create with: az ad sp create-for-rbac --name gl-rec-ado --role Contributor --scopes /subscriptions/<sub-id>
+azure_service_principal_id  = "<sp-client-id>"
+azure_service_principal_key = "<sp-client-secret>"
