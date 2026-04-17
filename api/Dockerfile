@@ -14,4 +14,5 @@ RUN dotnet publish "src/GLRecon.Api/GLRecon.Api.csproj" -c Release -o /app/publi
 FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
+USER app
 ENTRYPOINT ["dotnet", "GLRecon.Api.dll"]

@@ -99,9 +99,12 @@ stages:
               pollingTimeoutSec: "300"
 
           - script: |
-              GATE=$(curl -sf -u "$(SONARCLOUD_TOKEN):" \
-                "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$(sonarProjectKey)" \
-                | jq -r '.projectStatus.status')
+              URL="https://sonarcloud.io/api/qualitygates/project_status?projectKey=$(sonarProjectKey)"
+              if [ -n "$(System.PullRequest.PullRequestNumber)" ]; then
+                URL="$URL&pullRequest=$(System.PullRequest.PullRequestNumber)"
+              fi
+              GATE=$(curl -sf -u "$(SONARCLOUD_TOKEN):" "$URL" \
+                | sed 's/.*"projectStatus":{"status":"\([^"]*\)".*/\1/')
               echo "Quality gate status: $GATE"
               [ "$GATE" = "OK" ] && exit 0 || exit 1
             displayName: "SonarCloud — enforce quality gate"
