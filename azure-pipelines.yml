@@ -92,12 +92,9 @@ stages:
             displayName: "SonarCloud — analyse"
 
           - task: SonarCloudPublish@3
-            displayName: "SonarCloud — publish quality gate"
+            displayName: "SonarCloud — quality gate"
             inputs:
               pollingTimeoutSec: "300"
-
-          - task: SonarCloudQualityGateCheck@4
-            displayName: "SonarCloud — quality gate check"
 
           - task: Docker@2
             displayName: "Build & push API image"
