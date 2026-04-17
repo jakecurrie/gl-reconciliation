@@ -1,0 +1,247 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  terraformVersion: "1.7.5"
+  # Set these in Azure DevOps pipeline variables (not here — no secrets in YAML)
+  # SONARCLOUD_ORG        — your SonarCloud organization key
+  # ACR_SERVICE_CONNECTION — Azure DevOps service connection name for ACR
+  # AZURE_SUBSCRIPTION    — Azure DevOps service connection name for the subscription
+
+stages:
+  # ── Infra ─────────────────────────────────────────────────────────────────────
+  - stage: InfraValidate
+    displayName: "Infra — Validate Terraform"
+    jobs:
+      - job: Validate
+        displayName: "fmt + validate"
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - script: |
+              wget -q https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+              unzip -q terraform_$(terraformVersion)_linux_amd64.zip -d /tmp/tf
+              sudo mv /tmp/tf/terraform /usr/local/bin/
+            displayName: "Install Terraform $(terraformVersion)"
+
+          - script: terraform fmt -check -recursive
+            workingDirectory: infra
+            displayName: "terraform fmt -check"
+
+          - script: terraform init -backend=false
+            workingDirectory: infra
+            displayName: "terraform init (no backend)"
+
+          - script: terraform validate
+            workingDirectory: infra
+            displayName: "terraform validate"
+
+  # ── API ───────────────────────────────────────────────────────────────────────
+  # Uncomment when Phase 2 (.NET API) is complete.
+  # Prerequisites:
+  #   - SonarCloud service connection named 'sonarcloud' in Azure DevOps
+  #   - SonarCloud project key 'gl-rec-api' created at sonarcloud.io
+  #   - ACR service connection named 'acr' in Azure DevOps
+  #   - api/Dockerfile exists
+  #
+  # - stage: BuildAPI
+  #   displayName: "API — Build, Test & Analyse"
+  #   dependsOn: InfraValidate
+  #   jobs:
+  #     - job: Build
+  #       pool:
+  #         vmImage: ubuntu-latest
+  #       steps:
+  #         - task: SonarCloudPrepare@1
+  #           displayName: "SonarCloud — prepare"
+  #           inputs:
+  #             SonarCloud: "sonarcloud"
+  #             organization: "$(SONARCLOUD_ORG)"
+  #             scannerMode: MSBuild
+  #             projectKey: "gl-rec-api"
+  #             projectName: "GL Reconciliation API"
+  #             extraProperties: |
+  #               sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+  #
+  #         - task: DotNetCoreCLI@2
+  #           displayName: Restore
+  #           inputs:
+  #             command: restore
+  #             projects: "api/**/*.csproj"
+  #
+  #         - task: DotNetCoreCLI@2
+  #           displayName: Build
+  #           inputs:
+  #             command: build
+  #             projects: "api/**/*.csproj"
+  #             arguments: "--configuration Release --no-restore"
+  #
+  #         - task: DotNetCoreCLI@2
+  #           displayName: Test
+  #           inputs:
+  #             command: test
+  #             projects: "api/**/*.Tests.csproj"
+  #             arguments: >
+  #               --configuration Release
+  #               --no-build
+  #               --collect:"XPlat Code Coverage"
+  #               --settings api/coverlet.runsettings
+  #             publishTestResults: true
+  #
+  #         - task: SonarCloudAnalyze@1
+  #           displayName: "SonarCloud — analyse"
+  #
+  #         - task: SonarCloudPublish@1
+  #           displayName: "SonarCloud — publish quality gate"
+  #           inputs:
+  #             pollingTimeoutSec: "300"
+  #
+  #         - task: Docker@2
+  #           displayName: "Build & push API image"
+  #           condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  #           inputs:
+  #             containerRegistry: "$(ACR_SERVICE_CONNECTION)"
+  #             repository: "glrec-api"
+  #             command: buildAndPush
+  #             dockerfile: "api/Dockerfile"
+  #             context: "api"
+  #             tags: |
+  #               $(Build.BuildId)
+  #               latest
+
+  # ── Worker ────────────────────────────────────────────────────────────────────
+  # Uncomment when Phase 3 (Python Worker) is complete.
+  # Prerequisites:
+  #   - SonarCloud project key 'gl-rec-worker' created at sonarcloud.io
+  #   - worker/Dockerfile exists
+  #
+  # - stage: BuildWorker
+  #   displayName: "Worker — Build, Test & Analyse"
+  #   dependsOn: InfraValidate
+  #   jobs:
+  #     - job: Build
+  #       pool:
+  #         vmImage: ubuntu-latest
+  #       steps:
+  #         - task: SonarCloudPrepare@1
+  #           displayName: "SonarCloud — prepare"
+  #           inputs:
+  #             SonarCloud: "sonarcloud"
+  #             organization: "$(SONARCLOUD_ORG)"
+  #             scannerMode: CLI
+  #             configMode: manual
+  #             cliProjectKey: "gl-rec-worker"
+  #             cliProjectName: "GL Reconciliation Worker"
+  #             extraProperties: |
+  #               sonar.python.coverage.reportPaths=worker/coverage.xml
+  #               sonar.sources=worker
+  #               sonar.tests=worker/tests
+  #
+  #         - script: pip install poetry
+  #           displayName: Install Poetry
+  #
+  #         - script: poetry install
+  #           workingDirectory: worker
+  #           displayName: Install dependencies
+  #
+  #         - script: >
+  #             poetry run pytest
+  #             --cov=.
+  #             --cov-report=xml:coverage.xml
+  #             --cov-fail-under=80
+  #           workingDirectory: worker
+  #           displayName: "Test (80% coverage gate)"
+  #
+  #         - task: SonarCloudAnalyze@1
+  #           displayName: "SonarCloud — analyse"
+  #
+  #         - task: SonarCloudPublish@1
+  #           displayName: "SonarCloud — publish quality gate"
+  #           inputs:
+  #             pollingTimeoutSec: "300"
+  #
+  #         - task: Docker@2
+  #           displayName: "Build & push Worker image"
+  #           condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  #           inputs:
+  #             containerRegistry: "$(ACR_SERVICE_CONNECTION)"
+  #             repository: "glrec-worker"
+  #             command: buildAndPush
+  #             dockerfile: "worker/Dockerfile"
+  #             context: "worker"
+  #             tags: |
+  #               $(Build.BuildId)
+  #               latest
+
+  # ── Frontend ──────────────────────────────────────────────────────────────────
+  # Uncomment when Phase 4 (Angular Frontend) is complete.
+  # Prerequisites:
+  #   - SonarCloud project key 'gl-rec-frontend' created at sonarcloud.io
+  #   - Azure Static Web Apps resource provisioned (add to infra/container_apps.tf)
+  #   - STATIC_WEB_APPS_API_TOKEN set as a pipeline secret variable
+  #
+  # - stage: BuildFrontend
+  #   displayName: "Frontend — Build, Test & Analyse"
+  #   dependsOn: InfraValidate
+  #   jobs:
+  #     - job: Build
+  #       pool:
+  #         vmImage: ubuntu-latest
+  #       steps:
+  #         - task: SonarCloudPrepare@1
+  #           displayName: "SonarCloud — prepare"
+  #           inputs:
+  #             SonarCloud: "sonarcloud"
+  #             organization: "$(SONARCLOUD_ORG)"
+  #             scannerMode: CLI
+  #             configMode: manual
+  #             cliProjectKey: "gl-rec-frontend"
+  #             cliProjectName: "GL Reconciliation Frontend"
+  #             extraProperties: |
+  #               sonar.sources=frontend/src
+  #               sonar.tests=frontend/src
+  #               sonar.test.inclusions=**/*.spec.ts
+  #               sonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
+  #
+  #         - task: NodeTool@0
+  #           inputs:
+  #             versionSpec: "20.x"
+  #
+  #         - script: npm ci
+  #           workingDirectory: frontend
+  #           displayName: Install dependencies
+  #
+  #         - script: npm run build -- --configuration production
+  #           workingDirectory: frontend
+  #           displayName: Build
+  #
+  #         - script: >
+  #             npm run test --
+  #             --watch=false
+  #             --browsers=ChromeHeadless
+  #             --code-coverage
+  #           workingDirectory: frontend
+  #           displayName: Test
+  #
+  #         - task: SonarCloudAnalyze@1
+  #           displayName: "SonarCloud — analyse"
+  #
+  #         - task: SonarCloudPublish@1
+  #           displayName: "SonarCloud — publish quality gate"
+  #           inputs:
+  #             pollingTimeoutSec: "300"
+  #
+  #         - task: AzureStaticWebApp@0
+  #           displayName: "Deploy to Static Web Apps"
+  #           condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  #           inputs:
+  #             app_location: "frontend"
+  #             output_location: "dist/gl-rec-frontend"
+  #             azure_static_web_apps_api_token: "$(STATIC_WEB_APPS_API_TOKEN)"
