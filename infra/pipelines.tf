@@ -117,8 +117,8 @@ resource "azuredevops_build_definition" "main" {
   }
 
   pull_request_trigger {
-    use_yaml        = true
-    initial_branch  = "main"
+    use_yaml       = true
+    initial_branch = "main"
     forks {
       enabled       = false
       share_secrets = false
