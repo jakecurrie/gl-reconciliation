@@ -52,7 +52,7 @@ stages:
         pool:
           name: Default
         steps:
-          - task: SonarCloudPrepare@3
+          - task: SonarCloudPrepare@4
             displayName: "SonarCloud — prepare"
             inputs:
               SonarCloud: "sonarcloud"
@@ -88,10 +88,10 @@ stages:
                 --settings api/coverlet.runsettings
               publishTestResults: true
 
-          - task: SonarCloudAnalyze@3
+          - task: SonarCloudAnalyze@4
             displayName: "SonarCloud — analyse"
 
-          - task: SonarCloudPublish@3
+          - task: SonarCloudPublish@4
             displayName: "SonarCloud — quality gate"
             inputs:
               pollingTimeoutSec: "300"
@@ -123,7 +123,7 @@ stages:
   #       pool:
   #         vmImage: ubuntu-latest
   #       steps:
-  #         - task: SonarCloudPrepare@3
+  #         - task: SonarCloudPrepare@4
   #           displayName: "SonarCloud — prepare"
   #           inputs:
   #             SonarCloud: "sonarcloud"
@@ -152,10 +152,10 @@ stages:
   #           workingDirectory: worker
   #           displayName: "Test (80% coverage gate)"
   #
-  #         - task: SonarCloudAnalyze@3
+  #         - task: SonarCloudAnalyze@4
   #           displayName: "SonarCloud — analyse"
   #
-  #         - task: SonarCloudPublish@3
+  #         - task: SonarCloudPublish@4
   #           displayName: "SonarCloud — publish quality gate"
   #           inputs:
   #             pollingTimeoutSec: "300"
@@ -188,7 +188,7 @@ stages:
   #       pool:
   #         vmImage: ubuntu-latest
   #       steps:
-  #         - task: SonarCloudPrepare@3
+  #         - task: SonarCloudPrepare@4
   #           displayName: "SonarCloud — prepare"
   #           inputs:
   #             SonarCloud: "sonarcloud"
@@ -223,10 +223,10 @@ stages:
   #           workingDirectory: frontend
   #           displayName: Test
   #
-  #         - task: SonarCloudAnalyze@3
+  #         - task: SonarCloudAnalyze@4
   #           displayName: "SonarCloud — analyse"
   #
-  #         - task: SonarCloudPublish@3
+  #         - task: SonarCloudPublish@4
   #           displayName: "SonarCloud — publish quality gate"
   #           inputs:
   #             pollingTimeoutSec: "300"
