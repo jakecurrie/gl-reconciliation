@@ -4,4 +4,7 @@
     <Project Path="src/GLRecon.Domain/GLRecon.Domain.csproj" />
     <Project Path="src/GLRecon.Infrastructure/GLRecon.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GLRecon.Domain.Tests/GLRecon.Domain.Tests.csproj" />
+  </Folder>
 </Solution>
