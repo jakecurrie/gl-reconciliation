@@ -10,6 +10,7 @@ pr:
 
 variables:
   terraformVersion: "1.7.5"
+  sonarProjectKey: "gl-rec-api"
   # Set these in Azure DevOps pipeline variables (not here — no secrets in YAML)
   # SONARCLOUD_ORG        — your SonarCloud organization key
   # ACR_SERVICE_CONNECTION — Azure DevOps service connection name for ACR
@@ -58,7 +59,7 @@ stages:
               SonarCloud: "sonarcloud"
               organization: "$(SONARCLOUD_ORG)"
               scannerMode: dotnet
-              projectKey: "gl-rec-api"
+              projectKey: "$(sonarProjectKey)"
               projectName: "GL Reconciliation API"
               extraProperties: |
                 sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
@@ -99,8 +100,8 @@ stages:
 
           - script: |
               GATE=$(curl -sf -u "$(SONARCLOUD_TOKEN):" \
-                "https://sonarcloud.io/api/qualitygates/project_status?projectKey=gl-rec-api" | \
-                python3 -c "import json,sys; print(json.load(sys.stdin)['projectStatus']['status'])")
+                "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$(sonarProjectKey)" \
+                | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
               echo "Quality gate status: $GATE"
               [ "$GATE" = "OK" ] && exit 0 || exit 1
             displayName: "SonarCloud — enforce quality gate"
