@@ -1,4 +1,7 @@
 using Azure.Identity;
+using Azure.Messaging.ServiceBus;
+using GLRecon.Api.Endpoints;
+using GLRecon.Api.Services;
 using GLRecon.Domain.Repositories;
 using GLRecon.Infrastructure.Persistence;
 using GLRecon.Infrastructure.Persistence.Repositories;
@@ -22,6 +25,12 @@ builder.Services.AddScoped<IGLEntryRepository, GLEntryRepository>();
 builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
 builder.Services.AddScoped<IReconciliationRepository, ReconciliationRepository>();
 
+var serviceBusConnection = builder.Configuration["ServiceBus:ConnectionString"]
+    ?? throw new InvalidOperationException("ServiceBus:ConnectionString is not configured");
+
+builder.Services.AddSingleton(new ServiceBusClient(serviceBusConnection));
+builder.Services.AddSingleton<IServiceBusPublisher, ServiceBusPublisher>();
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -32,5 +41,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.MapEngagementEndpoints();
 
 app.Run();
