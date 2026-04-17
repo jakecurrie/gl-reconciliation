@@ -96,7 +96,7 @@ stages:
             inputs:
               pollingTimeoutSec: "300"
 
-          - task: SonarCloudQualityGateCheck@3
+          - task: SonarCloudQualityGateCheck@4
             displayName: "SonarCloud — quality gate check"
 
           - task: Docker@2
