@@ -96,6 +96,9 @@ stages:
             inputs:
               pollingTimeoutSec: "300"
 
+          - task: SonarCloudQualityGateCheck@3
+            displayName: "SonarCloud — quality gate check"
+
           # Uncomment when api/Dockerfile exists (PR 7)
           # - task: Docker@2
           #   displayName: "Build & push API image"
