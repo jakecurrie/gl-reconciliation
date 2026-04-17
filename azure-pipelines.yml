@@ -93,10 +93,17 @@ stages:
             displayName: "SonarCloud — analyse"
 
           - task: SonarCloudPublish@4
-            displayName: "SonarCloud — quality gate"
+            displayName: "SonarCloud — publish"
             inputs:
               pollingTimeoutSec: "300"
-              qualityGateFailsTask: true
+
+          - script: |
+              GATE=$(curl -sf -u "$(SONARCLOUD_TOKEN):" \
+                "https://sonarcloud.io/api/qualitygates/project_status?projectKey=gl-rec-api" | \
+                python3 -c "import json,sys; print(json.load(sys.stdin)['projectStatus']['status'])")
+              echo "Quality gate status: $GATE"
+              [ "$GATE" = "OK" ] && exit 0 || exit 1
+            displayName: "SonarCloud — enforce quality gate"
 
           - task: Docker@2
             displayName: "Build & push API image"
