@@ -57,7 +57,7 @@ stages:
             inputs:
               SonarCloud: "sonarcloud"
               organization: "$(SONARCLOUD_ORG)"
-              scannerMode: MSBuild
+              scannerMode: dotnet
               projectKey: "gl-rec-api"
               projectName: "GL Reconciliation API"
               extraProperties: |
