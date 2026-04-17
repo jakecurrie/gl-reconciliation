@@ -101,7 +101,7 @@ stages:
           - script: |
               GATE=$(curl -sf -u "$(SONARCLOUD_TOKEN):" \
                 "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$(sonarProjectKey)" \
-                | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+                | jq -r '.projectStatus.status')
               echo "Quality gate status: $GATE"
               [ "$GATE" = "OK" ] && exit 0 || exit 1
             displayName: "SonarCloud — enforce quality gate"
