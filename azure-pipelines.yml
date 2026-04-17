@@ -10,6 +10,7 @@ pr:
 
 variables:
   terraformVersion: "1.7.5"
+  sonarProjectKey: "gl-rec-api"
   # Set these in Azure DevOps pipeline variables (not here — no secrets in YAML)
   # SONARCLOUD_ORG        — your SonarCloud organization key
   # ACR_SERVICE_CONNECTION — Azure DevOps service connection name for ACR
@@ -52,16 +53,17 @@ stages:
         pool:
           name: Default
         steps:
-          - task: SonarCloudPrepare@3
+          - task: SonarCloudPrepare@4
             displayName: "SonarCloud — prepare"
             inputs:
               SonarCloud: "sonarcloud"
               organization: "$(SONARCLOUD_ORG)"
               scannerMode: dotnet
-              projectKey: "gl-rec-api"
+              projectKey: "$(sonarProjectKey)"
               projectName: "GL Reconciliation API"
               extraProperties: |
                 sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+                sonar.exclusions=infra/**,**/*.tf
 
           - task: DotNetCoreCLI@2
             displayName: Restore
@@ -88,30 +90,37 @@ stages:
                 --settings api/coverlet.runsettings
               publishTestResults: true
 
-          - task: SonarCloudAnalyze@3
+          - task: SonarCloudAnalyze@4
             displayName: "SonarCloud — analyse"
 
-          - task: SonarCloudPublish@3
-            displayName: "SonarCloud — publish quality gate"
+          - task: SonarCloudPublish@4
+            displayName: "SonarCloud — publish"
             inputs:
               pollingTimeoutSec: "300"
 
-          - task: SonarCloudQualityGateCheck@3
-            displayName: "SonarCloud — quality gate check"
+          - script: |
+              URL="https://sonarcloud.io/api/qualitygates/project_status?projectKey=$(sonarProjectKey)"
+              if [ -n "$(System.PullRequest.PullRequestNumber)" ]; then
+                URL="$URL&pullRequest=$(System.PullRequest.PullRequestNumber)"
+              fi
+              GATE=$(curl -sf -u "$(SONARCLOUD_TOKEN):" "$URL" \
+                | sed 's/.*"projectStatus":{"status":"\([^"]*\)".*/\1/')
+              echo "Quality gate status: $GATE"
+              [ "$GATE" = "OK" ] && exit 0 || exit 1
+            displayName: "SonarCloud — enforce quality gate"
 
-          # Uncomment when api/Dockerfile exists (PR 7)
-          # - task: Docker@2
-          #   displayName: "Build & push API image"
-          #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-          #   inputs:
-          #     containerRegistry: "$(ACR_SERVICE_CONNECTION)"
-          #     repository: "glrec-api"
-          #     command: buildAndPush
-          #     dockerfile: "api/Dockerfile"
-          #     context: "api"
-          #     tags: |
-          #       $(Build.BuildId)
-          #       latest
+          - task: Docker@2
+            displayName: "Build & push API image"
+            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+            inputs:
+              containerRegistry: "$(ACR_SERVICE_CONNECTION)"
+              repository: "glrec-api"
+              command: buildAndPush
+              dockerfile: "api/Dockerfile"
+              context: "api"
+              tags: |
+                $(Build.BuildId)
+                latest
 
   # ── Worker ────────────────────────────────────────────────────────────────────
   # Uncomment when Phase 3 (Python Worker) is complete.
@@ -127,7 +136,7 @@ stages:
   #       pool:
   #         vmImage: ubuntu-latest
   #       steps:
-  #         - task: SonarCloudPrepare@3
+  #         - task: SonarCloudPrepare@4
   #           displayName: "SonarCloud — prepare"
   #           inputs:
   #             SonarCloud: "sonarcloud"
@@ -156,10 +165,10 @@ stages:
   #           workingDirectory: worker
   #           displayName: "Test (80% coverage gate)"
   #
-  #         - task: SonarCloudAnalyze@3
+  #         - task: SonarCloudAnalyze@4
   #           displayName: "SonarCloud — analyse"
   #
-  #         - task: SonarCloudPublish@3
+  #         - task: SonarCloudPublish@4
   #           displayName: "SonarCloud — publish quality gate"
   #           inputs:
   #             pollingTimeoutSec: "300"
@@ -192,7 +201,7 @@ stages:
   #       pool:
   #         vmImage: ubuntu-latest
   #       steps:
-  #         - task: SonarCloudPrepare@3
+  #         - task: SonarCloudPrepare@4
   #           displayName: "SonarCloud — prepare"
   #           inputs:
   #             SonarCloud: "sonarcloud"
@@ -227,10 +236,10 @@ stages:
   #           workingDirectory: frontend
   #           displayName: Test
   #
-  #         - task: SonarCloudAnalyze@3
+  #         - task: SonarCloudAnalyze@4
   #           displayName: "SonarCloud — analyse"
   #
-  #         - task: SonarCloudPublish@3
+  #         - task: SonarCloudPublish@4
   #           displayName: "SonarCloud — publish quality gate"
   #           inputs:
   #             pollingTimeoutSec: "300"
