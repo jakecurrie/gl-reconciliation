@@ -23,7 +23,7 @@ stages:
       - job: Validate
         displayName: "fmt + validate"
         pool:
-          vmImage: ubuntu-latest
+          name: Default
         steps:
           - script: |
               wget -q https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
@@ -50,14 +50,14 @@ stages:
     jobs:
       - job: Build
         pool:
-          vmImage: ubuntu-latest
+          name: Default
         steps:
-          - task: SonarCloudPrepare@1
+          - task: SonarCloudPrepare@3
             displayName: "SonarCloud — prepare"
             inputs:
               SonarCloud: "sonarcloud"
               organization: "$(SONARCLOUD_ORG)"
-              scannerMode: MSBuild
+              scannerMode: dotnet
               projectKey: "gl-rec-api"
               projectName: "GL Reconciliation API"
               extraProperties: |
@@ -88,10 +88,10 @@ stages:
                 --settings api/coverlet.runsettings
               publishTestResults: true
 
-          - task: SonarCloudAnalyze@1
+          - task: SonarCloudAnalyze@3
             displayName: "SonarCloud — analyse"
 
-          - task: SonarCloudPublish@1
+          - task: SonarCloudPublish@3
             displayName: "SonarCloud — publish quality gate"
             inputs:
               pollingTimeoutSec: "300"
@@ -124,7 +124,7 @@ stages:
   #       pool:
   #         vmImage: ubuntu-latest
   #       steps:
-  #         - task: SonarCloudPrepare@1
+  #         - task: SonarCloudPrepare@3
   #           displayName: "SonarCloud — prepare"
   #           inputs:
   #             SonarCloud: "sonarcloud"
@@ -153,10 +153,10 @@ stages:
   #           workingDirectory: worker
   #           displayName: "Test (80% coverage gate)"
   #
-  #         - task: SonarCloudAnalyze@1
+  #         - task: SonarCloudAnalyze@3
   #           displayName: "SonarCloud — analyse"
   #
-  #         - task: SonarCloudPublish@1
+  #         - task: SonarCloudPublish@3
   #           displayName: "SonarCloud — publish quality gate"
   #           inputs:
   #             pollingTimeoutSec: "300"
@@ -189,7 +189,7 @@ stages:
   #       pool:
   #         vmImage: ubuntu-latest
   #       steps:
-  #         - task: SonarCloudPrepare@1
+  #         - task: SonarCloudPrepare@3
   #           displayName: "SonarCloud — prepare"
   #           inputs:
   #             SonarCloud: "sonarcloud"
@@ -224,10 +224,10 @@ stages:
   #           workingDirectory: frontend
   #           displayName: Test
   #
-  #         - task: SonarCloudAnalyze@1
+  #         - task: SonarCloudAnalyze@3
   #           displayName: "SonarCloud — analyse"
   #
-  #         - task: SonarCloudPublish@1
+  #         - task: SonarCloudPublish@3
   #           displayName: "SonarCloud — publish quality gate"
   #           inputs:
   #             pollingTimeoutSec: "300"
