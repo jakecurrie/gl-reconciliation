@@ -1,3 +1,8 @@
+resource "azuredevops_extension" "sonarcloud" {
+  publisher_id = "SonarSource"
+  extension_id = "sonarcloud"
+}
+
 resource "azuredevops_project" "main" {
   name               = var.ado_project_name
   visibility         = "private"
@@ -49,6 +54,8 @@ resource "azuredevops_serviceendpoint_sonarcloud" "main" {
   project_id            = azuredevops_project.main.id
   service_endpoint_name = "sonarcloud"
   token                 = var.sonarcloud_token
+
+  depends_on = [azuredevops_extension.sonarcloud]
 }
 
 # ── Variable group ────────────────────────────────────────────────────────────

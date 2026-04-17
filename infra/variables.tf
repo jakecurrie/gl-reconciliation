@@ -16,6 +16,12 @@ variable "location" {
   default     = "canadaeast"
 }
 
+variable "db_location" {
+  description = "Azure region for PostgreSQL. Canada East is restricted on new subscriptions — eastus2 is used as fallback."
+  type        = string
+  default     = "eastus2"
+}
+
 variable "postgres_admin_login" {
   description = "PostgreSQL Flexible Server administrator login"
   type        = string
