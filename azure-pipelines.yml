@@ -44,77 +44,71 @@ stages:
             displayName: "terraform validate"
 
   # ── API ───────────────────────────────────────────────────────────────────────
-  # Uncomment when Phase 2 (.NET API) is complete.
-  # Prerequisites:
-  #   - SonarCloud service connection named 'sonarcloud' in Azure DevOps
-  #   - SonarCloud project key 'gl-rec-api' created at sonarcloud.io
-  #   - ACR service connection named 'acr' in Azure DevOps
-  #   - api/Dockerfile exists
-  #
-  # - stage: BuildAPI
-  #   displayName: "API — Build, Test & Analyse"
-  #   dependsOn: InfraValidate
-  #   jobs:
-  #     - job: Build
-  #       pool:
-  #         vmImage: ubuntu-latest
-  #       steps:
-  #         - task: SonarCloudPrepare@1
-  #           displayName: "SonarCloud — prepare"
-  #           inputs:
-  #             SonarCloud: "sonarcloud"
-  #             organization: "$(SONARCLOUD_ORG)"
-  #             scannerMode: MSBuild
-  #             projectKey: "gl-rec-api"
-  #             projectName: "GL Reconciliation API"
-  #             extraProperties: |
-  #               sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
-  #
-  #         - task: DotNetCoreCLI@2
-  #           displayName: Restore
-  #           inputs:
-  #             command: restore
-  #             projects: "api/**/*.csproj"
-  #
-  #         - task: DotNetCoreCLI@2
-  #           displayName: Build
-  #           inputs:
-  #             command: build
-  #             projects: "api/**/*.csproj"
-  #             arguments: "--configuration Release --no-restore"
-  #
-  #         - task: DotNetCoreCLI@2
-  #           displayName: Test
-  #           inputs:
-  #             command: test
-  #             projects: "api/**/*.Tests.csproj"
-  #             arguments: >
-  #               --configuration Release
-  #               --no-build
-  #               --collect:"XPlat Code Coverage"
-  #               --settings api/coverlet.runsettings
-  #             publishTestResults: true
-  #
-  #         - task: SonarCloudAnalyze@1
-  #           displayName: "SonarCloud — analyse"
-  #
-  #         - task: SonarCloudPublish@1
-  #           displayName: "SonarCloud — publish quality gate"
-  #           inputs:
-  #             pollingTimeoutSec: "300"
-  #
-  #         - task: Docker@2
-  #           displayName: "Build & push API image"
-  #           condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  #           inputs:
-  #             containerRegistry: "$(ACR_SERVICE_CONNECTION)"
-  #             repository: "glrec-api"
-  #             command: buildAndPush
-  #             dockerfile: "api/Dockerfile"
-  #             context: "api"
-  #             tags: |
-  #               $(Build.BuildId)
-  #               latest
+  - stage: BuildAPI
+    displayName: "API — Build, Test & Analyse"
+    dependsOn: InfraValidate
+    jobs:
+      - job: Build
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: SonarCloudPrepare@1
+            displayName: "SonarCloud — prepare"
+            inputs:
+              SonarCloud: "sonarcloud"
+              organization: "$(SONARCLOUD_ORG)"
+              scannerMode: MSBuild
+              projectKey: "gl-rec-api"
+              projectName: "GL Reconciliation API"
+              extraProperties: |
+                sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+
+          - task: DotNetCoreCLI@2
+            displayName: Restore
+            inputs:
+              command: restore
+              projects: "api/**/*.csproj"
+
+          - task: DotNetCoreCLI@2
+            displayName: Build
+            inputs:
+              command: build
+              projects: "api/**/*.csproj"
+              arguments: "--configuration Release --no-restore"
+
+          - task: DotNetCoreCLI@2
+            displayName: Test
+            inputs:
+              command: test
+              projects: "api/**/*.Tests.csproj"
+              arguments: >
+                --configuration Release
+                --no-build
+                --collect:"XPlat Code Coverage"
+                --settings api/coverlet.runsettings
+              publishTestResults: true
+
+          - task: SonarCloudAnalyze@1
+            displayName: "SonarCloud — analyse"
+
+          - task: SonarCloudPublish@1
+            displayName: "SonarCloud — publish quality gate"
+            inputs:
+              pollingTimeoutSec: "300"
+
+          # Uncomment when api/Dockerfile exists (PR 7)
+          # - task: Docker@2
+          #   displayName: "Build & push API image"
+          #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+          #   inputs:
+          #     containerRegistry: "$(ACR_SERVICE_CONNECTION)"
+          #     repository: "glrec-api"
+          #     command: buildAndPush
+          #     dockerfile: "api/Dockerfile"
+          #     context: "api"
+          #     tags: |
+          #       $(Build.BuildId)
+          #       latest
 
   # ── Worker ────────────────────────────────────────────────────────────────────
   # Uncomment when Phase 3 (Python Worker) is complete.
