@@ -116,6 +116,15 @@ resource "azuredevops_build_definition" "main" {
     use_yaml = true
   }
 
+  pull_request_trigger {
+    use_yaml        = true
+    initial_branch  = "main"
+    forks {
+      enabled       = false
+      share_secrets = false
+    }
+  }
+
   repository {
     repo_type             = "GitHub"
     repo_id               = var.github_repo
