@@ -81,6 +81,31 @@ resource "azuredevops_variable_group" "pipeline_vars" {
   }
 }
 
+# ── Agent pool authorization ──────────────────────────────────────────────────
+
+data "azuredevops_agent_pool" "default" {
+  name = "Default"
+}
+
+resource "azuredevops_agent_queue" "default" {
+  project_id    = azuredevops_project.main.id
+  agent_pool_id = data.azuredevops_agent_pool.default.id
+}
+
+resource "azuredevops_pipeline_authorization" "default_pool" {
+  project_id  = azuredevops_project.main.id
+  resource_id = azuredevops_agent_queue.default.id
+  type        = "queue"
+  pipeline_id = azuredevops_build_definition.main.id
+}
+
+resource "azuredevops_pipeline_authorization" "hosted_pool" {
+  project_id  = azuredevops_project.main.id
+  resource_id = "18"
+  type        = "queue"
+  pipeline_id = azuredevops_build_definition.main.id
+}
+
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
 resource "azuredevops_build_definition" "main" {
